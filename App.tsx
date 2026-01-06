@@ -15,13 +15,13 @@ import {
   Clock,
   Menu,
   X,
-  CreditCard,
-  QrCode,
-  Lock,
-  ArrowLeft,
-  ChevronRight,
-  Star
+  Star,
+  ExternalLink,
+  Lock
 } from 'lucide-react';
+
+// --- Constantes ---
+const PAYMENT_LINK = "https://pay.kirvano.com/a2ba0d37-29c2-4db8-bb26-cc256642060c";
 
 // --- Types ---
 interface Testimonial {
@@ -36,8 +36,6 @@ interface Benefit {
   description: string;
   icon: React.ReactNode;
 }
-
-type ViewState = 'landing' | 'checkout';
 
 // --- Data ---
 const TESTIMONIALS: Testimonial[] = [
@@ -109,22 +107,25 @@ const STEPS = [
 
 // --- Sub-Components ---
 
-const Button: React.FC<{ 
+// Componente de link externo para o Checkout (Kirvano)
+// target="_blank" é CRUCIAL para evitar a tela branca em ambientes restritos
+const CheckoutLink: React.FC<{ 
   children: React.ReactNode; 
   className?: string; 
-  onClick?: () => void;
   primary?: boolean;
-}> = ({ children, className, onClick, primary = true }) => (
-  <button 
-    onClick={onClick}
-    className={`px-8 py-4 rounded-full font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-2 ${
+}> = ({ children, className, primary = true }) => (
+  <a 
+    href={PAYMENT_LINK}
+    target="_blank"
+    rel="noopener noreferrer"
+    className={`px-8 py-4 rounded-full font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-2 no-underline text-center ${
       primary 
       ? "bg-blue-600 text-white hover:bg-blue-700" 
       : "bg-green-500 text-white hover:bg-green-600"
     } ${className}`}
   >
     {children}
-  </button>
+  </a>
 );
 
 const SectionHeading: React.FC<{ 
@@ -148,11 +149,8 @@ const SectionHeading: React.FC<{
 // --- Main App Component ---
 
 const App: React.FC = () => {
-  const [view, setView] = useState<ViewState>('landing');
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'pix'>('card');
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -161,221 +159,13 @@ const App: React.FC = () => {
   }, []);
 
   const scrollToId = (id: string) => {
-    if (view !== 'landing') {
-      setView('landing');
-      setTimeout(() => {
-        const element = document.getElementById(id);
-        if (element) {
-          window.scrollTo({ top: element.offsetTop - 80, behavior: 'smooth' });
-        }
-      }, 100);
-    } else {
-      const element = document.getElementById(id);
-      if (element) {
-        window.scrollTo({ top: element.offsetTop - 80, behavior: 'smooth' });
-      }
+    const element = document.getElementById(id);
+    if (element) {
+      window.scrollTo({ top: element.offsetTop - 80, behavior: 'smooth' });
     }
     setIsMenuOpen(false);
   };
 
-  const goToCheckout = () => {
-    setView('checkout');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // --- Render Views ---
-
-  if (view === 'checkout') {
-    return (
-      <div className="min-h-screen bg-slate-50 py-12 px-6">
-        <div className="max-w-5xl mx-auto">
-          {/* Header Checkout */}
-          <div className="flex items-center justify-between mb-12">
-            <button 
-              onClick={() => setView('landing')}
-              className="flex items-center gap-2 text-slate-500 hover:text-blue-600 font-medium transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Voltar para a página inicial
-            </button>
-            <div className="flex items-center gap-2">
-              <Brain className="text-blue-600 w-6 h-6" />
-              <span className="font-bold text-slate-800">NeuroFlow TDAH</span>
-            </div>
-          </div>
-
-          <div className="grid lg:grid-cols-5 gap-12">
-            {/* Coluna de Dados */}
-            <div className="lg:col-span-3 space-y-8">
-              {/* Passo 1: Planos */}
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
-                <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">1</div>
-                  Escolha seu Plano
-                </h3>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div 
-                    onClick={() => setSelectedPlan('monthly')}
-                    className={`cursor-pointer p-6 rounded-2xl border-2 transition-all ${selectedPlan === 'monthly' ? 'border-blue-600 bg-blue-50/50' : 'border-slate-100 hover:border-slate-200'}`}
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <span className="font-bold text-slate-900">Mensal</span>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPlan === 'monthly' ? 'border-blue-600' : 'border-slate-300'}`}>
-                        {selectedPlan === 'monthly' && <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>}
-                      </div>
-                    </div>
-                    <p className="text-2xl font-black text-slate-900">R$ 29,90<span className="text-sm font-medium text-slate-500">/mês</span></p>
-                    <p className="text-sm text-slate-500 mt-2">Cancele quando quiser.</p>
-                  </div>
-                  <div 
-                    onClick={() => setSelectedPlan('annual')}
-                    className={`relative cursor-pointer p-6 rounded-2xl border-2 transition-all ${selectedPlan === 'annual' ? 'border-blue-600 bg-blue-50/50' : 'border-slate-100 hover:border-slate-200'}`}
-                  >
-                    <div className="absolute -top-3 right-4 bg-green-500 text-white text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wider">Melhor Valor</div>
-                    <div className="flex justify-between items-start mb-4">
-                      <span className="font-bold text-slate-900">Anual</span>
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPlan === 'annual' ? 'border-blue-600' : 'border-slate-300'}`}>
-                        {selectedPlan === 'annual' && <div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div>}
-                      </div>
-                    </div>
-                    <p className="text-2xl font-black text-slate-900">R$ 19,90<span className="text-sm font-medium text-slate-500">/mês</span></p>
-                    <p className="text-sm text-green-600 font-bold mt-2">Economize 33%</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Passo 2: Informações */}
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
-                <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">2</div>
-                  Seus Dados
-                </h3>
-                <div className="grid gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">Nome Completo</label>
-                    <input type="text" placeholder="Como no seu RG" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-2">E-mail para acesso</label>
-                    <input type="email" placeholder="seu@email.com" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all" />
-                    <p className="text-[11px] text-slate-400 mt-2">Enviaremos os dados de acesso do app para este e-mail.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Passo 3: Pagamento */}
-              <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
-                <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">3</div>
-                  Pagamento
-                </h3>
-                <div className="flex gap-4 mb-8">
-                  <button 
-                    onClick={() => setPaymentMethod('card')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-xl border-2 transition-all font-bold ${paymentMethod === 'card' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-500 hover:border-slate-200'}`}
-                  >
-                    <CreditCard className="w-5 h-5" />
-                    Cartão
-                  </button>
-                  <button 
-                    onClick={() => setPaymentMethod('pix')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-xl border-2 transition-all font-bold ${paymentMethod === 'pix' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-slate-100 text-slate-500 hover:border-slate-200'}`}
-                  >
-                    <QrCode className="w-5 h-5" />
-                    PIX
-                  </button>
-                </div>
-
-                {paymentMethod === 'card' ? (
-                  <div className="space-y-4">
-                    <div className="grid gap-4">
-                      <input type="text" placeholder="Número do Cartão" className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none" />
-                      <div className="grid grid-cols-2 gap-4">
-                        <input type="text" placeholder="Validade (MM/AA)" className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none" />
-                        <input type="text" placeholder="CVV" className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none" />
-                      </div>
-                      <select className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none bg-white">
-                        <option>1x de R$ {selectedPlan === 'annual' ? '238,80' : '29,90'}</option>
-                        {selectedPlan === 'annual' && <option>12x de R$ 19,90</option>}
-                      </select>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center p-6 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                    <QrCode className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-                    <p className="font-bold text-slate-800">O QR Code será gerado após o clique no botão.</p>
-                    <p className="text-sm text-slate-500">Aprovação imediata e acesso liberado na hora.</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3 text-slate-500 text-sm justify-center">
-                <Lock className="w-4 h-4" />
-                Pagamento processado em ambiente 100% seguro.
-              </div>
-            </div>
-
-            {/* Coluna de Resumo */}
-            <div className="lg:col-span-2">
-              <div className="sticky top-8 space-y-6">
-                <div className="bg-slate-900 text-white p-8 rounded-[40px] shadow-xl overflow-hidden relative">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/20 blur-3xl"></div>
-                  <h4 className="text-lg font-bold mb-6 pb-6 border-b border-white/10">Resumo da Compra</h4>
-                  
-                  <div className="space-y-4 mb-8">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Plano NeuroFlow {selectedPlan === 'annual' ? 'Anual' : 'Mensal'}</span>
-                      <span className="font-bold">R$ {selectedPlan === 'annual' ? '238,80' : '29,90'}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-green-400 font-bold">
-                      <span>Acesso Imediato</span>
-                      <span>GRÁTIS</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-6 border-t border-white/10 flex justify-between items-end mb-8">
-                    <div>
-                      <p className="text-xs text-slate-400 uppercase tracking-widest font-bold mb-1">Total hoje</p>
-                      <p className="text-3xl font-black">R$ {selectedPlan === 'annual' ? '238,80' : '29,90'}</p>
-                    </div>
-                  </div>
-
-                  <Button 
-                    className="w-full py-5 text-lg bg-green-500 hover:bg-green-600 shadow-green-900/40"
-                    onClick={() => alert('Parabéns! Seu acesso será enviado para o e-mail cadastrado.')}
-                  >
-                    FINALIZAR PAGAMENTO
-                    <ChevronRight className="w-5 h-5" />
-                  </Button>
-
-                  <div className="mt-8 space-y-3">
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                      <CheckCircle2 className="w-4 h-4 text-green-500" /> 7 dias de garantia incondicional
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
-                      <CheckCircle2 className="w-4 h-4 text-green-500" /> Acesso vitalício aos dados históricos
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                    <span className="font-bold text-blue-900">Suporte Prioritário</span>
-                  </div>
-                  <p className="text-sm text-blue-800 leading-relaxed">
-                    Assinantes NeuroFlow têm canal direto via WhatsApp para dúvidas e orientações sobre o app.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // --- Landing View ---
   return (
     <div className="min-h-screen bg-slate-50 overflow-x-hidden">
       {/* Navbar */}
@@ -392,7 +182,7 @@ const App: React.FC = () => {
             <button onClick={() => scrollToId('benefits')} className="text-slate-600 hover:text-blue-600 font-medium transition-colors">Benefícios</button>
             <button onClick={() => scrollToId('how-it-works')} className="text-slate-600 hover:text-blue-600 font-medium transition-colors">Como funciona</button>
             <button onClick={() => scrollToId('testimonials')} className="text-slate-600 hover:text-blue-600 font-medium transition-colors">Depoimentos</button>
-            <Button onClick={goToCheckout} className="py-2.5 px-6 text-sm" primary>Começar Agora</Button>
+            <CheckoutLink className="py-2.5 px-6 text-sm" primary>Assinar Agora</CheckoutLink>
           </div>
 
           <button className="md:hidden text-slate-800" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -406,7 +196,7 @@ const App: React.FC = () => {
             <button onClick={() => scrollToId('benefits')} className="py-2 text-left text-slate-700 font-medium border-b border-slate-100">Benefícios</button>
             <button onClick={() => scrollToId('how-it-works')} className="py-2 text-left text-slate-700 font-medium border-b border-slate-100">Como funciona</button>
             <button onClick={() => scrollToId('testimonials')} className="py-2 text-left text-slate-700 font-medium border-b border-slate-100">Depoimentos</button>
-            <Button onClick={goToCheckout} className="mt-2">Quero Meu Foco de Volta</Button>
+            <CheckoutLink>Quero Meu Foco de Volta</CheckoutLink>
           </div>
         )}
       </nav>
@@ -426,9 +216,10 @@ const App: React.FC = () => {
               Foco, calma e organização mental sem complicação. O NeuroFlow transforma sua rotina com microações práticas de poucos minutos por dia.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button onClick={goToCheckout} className="text-lg shadow-blue-200">
-                COMEÇAR AGORA COM O NEUROFLOW
-              </Button>
+              <CheckoutLink className="text-lg shadow-blue-200">
+                COMEÇAR AGORA NO KIRVANO
+                <ExternalLink className="w-5 h-5" />
+              </CheckoutLink>
             </div>
             <div className="mt-8 flex items-center gap-4 text-slate-500 text-sm font-medium">
               <div className="flex -space-x-2">
@@ -594,9 +385,9 @@ const App: React.FC = () => {
             ))}
           </div>
           <div className="mt-16 flex justify-center">
-            <Button onClick={goToCheckout} className="bg-white text-slate-900 hover:bg-slate-100 shadow-white/10">
+            <CheckoutLink className="bg-white text-slate-900 hover:bg-slate-100 shadow-white/10">
               Quero experimentar esse método
-            </Button>
+            </CheckoutLink>
           </div>
         </div>
       </section>
@@ -673,12 +464,12 @@ const App: React.FC = () => {
             Junte-se a milhares de pessoas que aprenderam a domar o TDAH e estão vivendo com muito mais foco e autoestima.
           </p>
           <div className="flex flex-col items-center gap-6">
-            <Button onClick={goToCheckout} className="text-xl px-12 py-6 bg-white text-blue-600 hover:bg-slate-100 shadow-xl shadow-blue-900/20">
-              COMEÇAR AGORA COM O NEUROFLOW TDAH
+            <CheckoutLink className="text-xl px-12 py-6 bg-white text-blue-600 hover:bg-slate-100 shadow-xl shadow-blue-900/20">
+              ASSINAR NO KIRVANO AGORA
               <ArrowRight className="w-6 h-6" />
-            </Button>
+            </CheckoutLink>
             <div className="flex flex-col sm:flex-row items-center gap-4 text-white/80 text-sm">
-              <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-400" /> Cancelamento fácil</span>
+              <span className="flex items-center gap-2"><Lock className="w-4 h-4 text-green-400" /> Pagamento 100% Seguro</span>
               <span className="hidden sm:inline opacity-30">|</span>
               <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-400" /> Teste grátis por 7 dias</span>
             </div>
@@ -712,7 +503,7 @@ const App: React.FC = () => {
           </div>
           <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-500 text-sm">
             <p>&copy; {new Date().getFullYear()} NeuroFlow TDAH. Todos os direitos reservados.</p>
-            <p className="flex items-center gap-1 text-center">Feito com <span className="text-red-500">❤️</span> para a comunidade TDAH.</p>
+            <p className="flex items-center gap-1 text-center">Checkout processado via <a href="https://kirvano.com" className="underline hover:text-white">Kirvano</a>.</p>
           </div>
         </div>
       </footer>
